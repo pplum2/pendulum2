@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Driven Damped Pendulum</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: #eee;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    h1 { margin-bottom: 4px; font-size: 1.2rem; letter-spacing: 2px; color: #aef; }
+    p  { margin: 0 0 16px; font-size: 0.75rem; color: #888; }
+    canvas { background: #1a1a2e; border-radius: 8px; }
+    .controls {
+      display: flex;
+      gap: 24px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    label { font-size: 0.8rem; display: flex; flex-direction: column; gap: 4px; color: #ccc; }
+    input[type=range] { width: 140px; accent-color: #6af; }
+    .val { color: #6af; text-align: right; }
+    button {
+      margin-top: 12px;
+      padding: 8px 24px;
+      background: #6af;
+      color: #111;
+      border: none;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    button:hover { background: #8cf; }
+  </style>
+</head>
+<body>
+  <h1>DRIVEN DAMPED PENDULUM</h1>
+  <p>Baker &amp; Gollub — Chaotic Dynamics: An Introduction</p>
+
+  <canvas id="c" width="500" height="400"></canvas>
+
+  <div class="controls">
+    <label>
+      Driving amplitude g
+      <input type="range" id="g" min="0" max="2" step="0.01" value="1.5">
+      <span class="val" id="gVal">1.50</span>
+    </label>
+    <label>
+      Damping 1/q
+      <input type="range" id="q" min="0.1" max="2" step="0.01" value="0.5">
+      <span class="val" id="qVal">0.50</span>
+    </label>
+    <label>
+      Drive frequency Ω<sub>D</sub>
+      <input type="range" id="w" min="0.1" max="2" step="0.01" value="0.667">
+      <span class="val" id="wVal">0.67</span>
+    </label>
+  </div>
+  <button id="resetBtn">Reset</button>
+
+  <script>
+    // ── Equation of motion (Baker & Gollub, eq. 2.3) ──────────────────────────
+    // d²θ/dt² = -(1/q)·dθ/dt - sin(θ) + g·cos(Ω_D·t)
+    //
+    // State vector: [θ, ω, t]
+    //   dθ/dt = ω
+    //   dω/dt = -(1/q)·ω - sin(θ) + g·cos(Ω_D·t)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    const canvas = document.getElementById('c');
+    const ctx    = canvas.getContext('2d');
+
+    let gAmp = 1.5, invQ = 0.5, omegaD = 2/3;
+
+    // Initial conditions
+    let theta = 0.2, omega = 0.0, t = 0.0;
+    const dt = 0.02;          // time step
+    const L  = 140;           // pixels — rod length on screen
+    const cx = canvas.width  / 2;
+    const cy = canvas.height / 2 - 40;
+
+    // Trail
+    const trail = [];
+    const TRAIL_LEN = 120;
+
+    function derivatives(th, om, time) {
+      const dth = om;
+      const dom = -invQ * om - Math.sin(th) + gAmp * Math.cos(omegaD * time);
+      return [dth, dom];
+    }
+
+    function rk4Step() {
+      const [k1t, k1o] = derivatives(theta, omega, t);
+      const [k2t, k2o] = derivatives(theta + 0.5*dt*k1t, omega + 0.5*dt*k1o, t + 0.5*dt);
+      const [k3t, k3o] = derivatives(theta + 0.5*dt*k2t, omega + 0.5*dt*k2o, t + 0.5*dt);
+      const [k4t, k4o] = derivatives(theta +     dt*k3t, omega +     dt*k3o, t +     dt);
+
+      theta += (dt/6) * (k1t + 2*k2t + 2*k3t + k4t);
+      omega += (dt/6) * (k1o + 2*k2o + 2*k3o + k4o);
+      t     += dt;
+    }
+
+    function bobPos() {
+      return {
+        x: cx + L * Math.sin(theta),
+        y: cy + L * Math.cos(theta)
+      };
+    }
+
+    function draw() {
+      // Advance physics several steps per frame
+      for (let i = 0; i < 4; i++) rk4Step();
+
+      const bob = bobPos();
+      trail.push({ x: bob.x, y: bob.y });
+      if (trail.length > TRAIL_LEN) trail.shift();
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Pivot point marker
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#555';
+      ctx.fill();
+
+      // Trail
+      for (let i = 1; i < trail.length; i++) {
+        const alpha = i / trail.length;
+        ctx.beginPath();
+        ctx.moveTo(trail[i-1].x, trail[i-1].y);
+        ctx.lineTo(trail[i].x,   trail[i].y);
+        ctx.strokeStyle = `rgba(100, 180, 255, ${alpha * 0.6})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      // Rod
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(bob.x, bob.y);
+      ctx.strokeStyle = '#ccc';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Bob
+      ctx.beginPath();
+      ctx.arc(bob.x, bob.y, 14, 0, Math.PI * 2);
+      ctx.fillStyle = '#6af';
+      ctx.shadowColor = '#6af';
+      ctx.shadowBlur = 16;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Drive indicator (small rotating arrow at pivot)
+      const driveAngle = omegaD * t;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(driveAngle);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(22, 0);
+      ctx.strokeStyle = 'rgba(255,160,60,0.7)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+
+      // HUD
+      ctx.fillStyle = '#666';
+      ctx.font = '11px monospace';
+      ctx.fillText(`t = ${t.toFixed(1)}`, 12, 20);
+      ctx.fillText(`θ = ${(theta * 180 / Math.PI).toFixed(1)}°`, 12, 34);
+      ctx.fillText(`ω = ${omega.toFixed(3)}`, 12, 48);
+
+      requestAnimationFrame(draw);
+    }
+
+    // ── Controls ───────────────────────────────────────────────────────────────
+    function bindSlider(id, valId, setter, decimals) {
+      const slider = document.getElementById(id);
+      const display = document.getElementById(valId);
+      slider.addEventListener('input', () => {
+        setter(parseFloat(slider.value));
+        display.textContent = parseFloat(slider.value).toFixed(decimals);
+      });
+    }
+
+    bindSlider('g', 'gVal', v => { gAmp   = v; }, 2);
+    bindSlider('q', 'qVal', v => { invQ   = v; }, 2);
+    bindSlider('w', 'wVal', v => { omegaD = v; }, 2);
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      theta = 0.2; omega = 0.0; t = 0.0;
+      trail.length = 0;
+    });
+
+    draw();
+  </script>
+</body>
+</html>
