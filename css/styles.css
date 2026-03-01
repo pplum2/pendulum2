@@ -337,6 +337,68 @@ canvas {
   margin: 14px 0;
 }
 
+/* ── Preset panel ─────────────────────────────────────────────────── */
+.preset-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preset-group-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+.preset-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.preset-btn {
+  width: 100%;
+  text-align: left;
+  padding: 5px 9px;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preset-btn:hover {
+  color: var(--text);
+  border-color: #3a3a60;
+  background: #16162a;
+}
+
+.preset-btn--active {
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+  background: rgba(91,156,246,0.08) !important;
+}
+
+/* The Baker & Gollub canonical example gets a subtle star treatment */
+.preset-btn--star {
+  color: var(--text);
+  border-color: #3a3a55;
+}
+
+.preset-btn--star::after {
+  content: ' ★';
+  color: var(--accent2);
+  font-size: 9px;
+}
+
 /* ── Scrollbar ────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }

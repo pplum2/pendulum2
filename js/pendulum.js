@@ -1,5 +1,6 @@
-import { store }    from './store.js';
-import { rk4Step }  from './physics.js';
+import { store }          from './store.js';
+import { rk4Step }        from './physics.js';
+import { renderPresets }  from './presets.js';
 
 const TRAIL = 150;
 let animId   = null;
@@ -52,10 +53,8 @@ export function init(container) {
         </div>
 
         <div class="divider"></div>
-        <p class="hint">
-          Default params (g=1.5, 1/q=0.5, Ω<sub>D</sub>=2/3) show the <strong>chaotic regime</strong>
-          from Baker &amp; Gollub. The orange arrow shows the drive phase.
-        </p>
+        <p class="hint" style="margin-bottom:6px;">Quick presets</p>
+        <div id="pn-presets"></div>
       </div>
 
       <div class="canvas-wrap">
@@ -76,6 +75,13 @@ export function init(container) {
   bindSlider('pn-spf', 'pn-spfv', null,      v => v.toFixed(0));
 
   document.getElementById('pn-reset').addEventListener('click', () => {
+    state = { theta: 0.2, omega: 0.0, t: 0.0 };
+    trail = [];
+  });
+
+  // Preset buttons — reset state when a preset is chosen
+  const presetContainer = document.getElementById('pn-presets');
+  renderPresets(presetContainer, () => {
     state = { theta: 0.2, omega: 0.0, t: 0.0 };
     trail = [];
   });

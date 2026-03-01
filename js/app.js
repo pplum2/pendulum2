@@ -1,13 +1,15 @@
 import { init as initPendulum, destroy as destroyPendulum } from './pendulum.js';
 import { init as initGenerator }                            from './generator.js';
-import { init as initPhase2D }                             from './phase2d.js';
-import { init as initPhase3D, destroy as destroyPhase3D }  from './phase3d.js';
+import { init as initPhase2D,   destroy as destroyPhase2D } from './phase2d.js';
+import { init as initPhase3D,   destroy as destroyPhase3D } from './phase3d.js';
+import { init as initPoincare,  destroy as destroyPoincare } from './poincare.js';
 
 const views = {
   pendulum:  { init: initPendulum,  destroy: destroyPendulum  },
   generator: { init: initGenerator, destroy: null             },
-  phase2d:   { init: initPhase2D,   destroy: null             },
+  phase2d:   { init: initPhase2D,   destroy: destroyPhase2D  },
   phase3d:   { init: initPhase3D,   destroy: destroyPhase3D   },
+  poincare:  { init: initPoincare,  destroy: destroyPoincare  },
 };
 
 let current = null;

@@ -1,5 +1,6 @@
-import { store }   from './store.js';
-import { rk4Step } from './physics.js';
+import { store }         from './store.js';
+import { rk4Step }       from './physics.js';
+import { renderPresets } from './presets.js';
 
 const CHUNK_SIZE = 8000; // steps computed per setTimeout tick
 
@@ -65,6 +66,10 @@ export function init(container) {
         </div>
 
         <div class="stats-box" id="gn-stats">No data yet.</div>
+
+        <div class="divider"></div>
+        <p class="hint" style="margin-bottom:6px;">Quick presets</p>
+        <div id="gn-presets"></div>
       </div>
 
       <div class="canvas-wrap">
@@ -83,6 +88,8 @@ export function init(container) {
   document.getElementById('gn-run').addEventListener('click',   startGen);
   document.getElementById('gn-stop').addEventListener('click',  stopGen);
   document.getElementById('gn-clear').addEventListener('click', clearData);
+
+  renderPresets(document.getElementById('gn-presets'));
 
   // Resize canvas
   const canvas = document.getElementById('gn-canvas');
